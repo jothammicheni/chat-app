@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "946432931657",
+    "project_id": "real-time-chat-app-ef61a",
+    "storage_bucket": "real-time-chat-app-ef61a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:946432931657:android:7b86a674e8c08726c08c98",
+        "android_client_info": {
+          "package_name": "com.example.chatapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBVLzYq83z7i0aBnFnO8qh2Qnp-y-TJYTI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
