@@ -1,4 +1,5 @@
 package com.example.chatapp;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Patterns;
@@ -24,6 +25,10 @@ public class Login extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
 
+
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,7 +44,11 @@ public class Login extends AppCompatActivity {
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                login();
+
+
+                Intent intent=new Intent(getApplicationContext(), Contacts.class);
+                startActivity(intent);
+                //login();
             }
         });
         tvBackToRegister.setOnClickListener(new View.OnClickListener() {
@@ -75,6 +84,9 @@ public class Login extends AppCompatActivity {
                             @Override
                             public void onSuccess(AuthResult authResult) {
                                 Toast.makeText(Login.this, "signed in", Toast.LENGTH_SHORT).show();
+
+                                Intent intent=new Intent(getApplicationContext(), ChatActivity.class);
+                                startActivity(intent);
                             }
                         })
                 .addOnFailureListener(new OnFailureListener() {
@@ -86,3 +98,6 @@ public class Login extends AppCompatActivity {
 
     }
 }
+
+
+

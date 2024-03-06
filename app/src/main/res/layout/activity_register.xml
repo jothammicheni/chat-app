@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".Register">
 
+
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -66,5 +67,6 @@
 
         </LinearLayout>
     </RelativeLayout>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

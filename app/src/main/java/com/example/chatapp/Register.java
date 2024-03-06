@@ -86,20 +86,25 @@ public class Register extends AppCompatActivity {
 
 
         mAuth.createUserWithEmailAndPassword(email,password)
-                .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
-                    @Override
-                    public void onSuccess(AuthResult authResult) {
-
-                        userInfo user = new userInfo(name, email, password);
-                        databaseReference.child(email).setValue(user);
-                        Toast.makeText(Register.this, "registred", Toast.LENGTH_SHORT).show();
-                    }
+                .addOnSuccessListener(authResult -> {
+                    // User registered successfully
+                    // Save user data to the database
+                    String userId = mAuth.getCurrentUser().getUid();
+                    DatabaseReference userRef = databaseReference.child(userId);
+                    userInfo user = new userInfo(name, email,password); // Create a userInfo object with name and email
+                    userRef.setValue(user)
+                            .addOnSuccessListener(aVoid -> {
+                                // Data saved successfully
+                                Toast.makeText(Register.this, "User registered and data saved successfully", Toast.LENGTH_SHORT).show();
+                            })
+                            .addOnFailureListener(e -> {
+                                // Error saving data
+                                Toast.makeText(Register.this, "Failed to save user data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            });
                 })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(Register.this, "Failed", Toast.LENGTH_SHORT).show();
-                    }
+                .addOnFailureListener(e -> {
+                    // Error registering user
+                    Toast.makeText(Register.this, "Failed to register user: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
 
 
