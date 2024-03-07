@@ -3,6 +3,7 @@ package com.example.chatapp;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -16,6 +17,17 @@ import java.util.List;
 public class ContactsAdapter extends RecyclerView.Adapter<ContactsAdapter.ViewHolder> {
 
     private List<userInfo> userList;
+    userInfo userinfo;
+    private OnItemClickListener listener;
+
+    public interface OnItemClickListener {
+        void onItemClick(userInfo user);
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.listener = listener;
+    }
+
 
     public ContactsAdapter(List<userInfo> userList) {
         this.userList = userList;
@@ -34,9 +46,19 @@ public class ContactsAdapter extends RecyclerView.Adapter<ContactsAdapter.ViewHo
             userInfo userInfo = userList.get(position);
             if (userInfo != null) {
                 holder.bind(userInfo);
+
+                holder.itemView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if (listener != null) {
+                            listener.onItemClick(userInfo);
+                        }
+                    }
+                });
             }
         }
     }
+
 
     @Override
     public int getItemCount() {

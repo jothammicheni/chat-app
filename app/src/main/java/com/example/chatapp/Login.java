@@ -45,10 +45,10 @@ public class Login extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-
-                Intent intent=new Intent(getApplicationContext(), Contacts.class);
-                startActivity(intent);
-                //login();
+//
+//                Intent intent=new Intent(getApplicationContext(), Contacts.class);
+//                startActivity(intent);
+                login();
             }
         });
         tvBackToRegister.setOnClickListener(new View.OnClickListener() {
@@ -85,7 +85,7 @@ public class Login extends AppCompatActivity {
                             public void onSuccess(AuthResult authResult) {
                                 Toast.makeText(Login.this, "signed in", Toast.LENGTH_SHORT).show();
 
-                                Intent intent=new Intent(getApplicationContext(), ChatActivity.class);
+                                Intent intent=new Intent(getApplicationContext(), Contacts.class);
                                 startActivity(intent);
                             }
                         })

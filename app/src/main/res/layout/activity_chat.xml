@@ -8,17 +8,25 @@
 
 <LinearLayout
     android:layout_width="match_parent"
-    android:layout_height="50dp"
+    android:layout_height="100dp"
     android:background="@color/white"
     android:orientation="horizontal"
-    tools:ignore="MissingConstraints">
+    tools:ignore="MissingConstraints"
+    android:gravity="end">
     <Spinner
         android:id="@+id/spinnerUsers"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAlignment="center"
         app:layout_constraintEnd_toEndOf="parent"
-
+        android:visibility="gone"
+        />
+    <Button
+        android:id="@+id/btnNewChat"
+        android:layout_width="200dp"
+        android:layout_height="70dp"
+        android:backgroundTint="@color/black"
+        android:text="New Chat"
         />
 </LinearLayout>
 <RelativeLayout

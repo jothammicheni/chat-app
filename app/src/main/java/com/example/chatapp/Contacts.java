@@ -5,7 +5,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.Toast;
 
 import com.example.chatapp.data.userInfo;
 import com.google.firebase.database.DataSnapshot;
@@ -21,8 +24,8 @@ public class Contacts extends AppCompatActivity {
 
     private RecyclerView contactsRecyclerView;
     private DatabaseReference contactsRef;
-    private List<userInfo> userList;
     private ContactsAdapter contactsAdapter;
+    private List<userInfo> userList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,21 +44,32 @@ public class Contacts extends AppCompatActivity {
         contactsRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                userList.clear(); // Clear the list before adding new data
+                userList.clear();
                 for (DataSnapshot contactSnapshot : snapshot.getChildren()) {
                     String name = contactSnapshot.child("name").getValue(String.class);
                     String email = contactSnapshot.child("email").getValue(String.class);
-                    // You can retrieve other user details here if needed
                     userInfo userInfo = new userInfo(name, email, "");
                     userList.add(userInfo);
                 }
 
-                contactsAdapter.notifyDataSetChanged(); // Notify the adapter of data changes
+                contactsAdapter.setOnItemClickListener(new ContactsAdapter.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(userInfo user) {
+                        // Add logging for debugging
+                        Log.d("ChatApp", "Clicked on user: " + user.getName());
+
+                        Intent intent = new Intent(getApplicationContext(), ChatActivity.class);
+                        intent.putExtra("recipientName", user.getEmail());
+                        startActivity(intent);
+                    }
+                });
+
+                contactsAdapter.notifyDataSetChanged();
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                // Handle database error if needed
+                Toast.makeText(Contacts.this, "Failed to load user list", Toast.LENGTH_SHORT).show();
             }
         });
     }
