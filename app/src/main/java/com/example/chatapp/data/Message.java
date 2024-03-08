@@ -2,19 +2,30 @@ package com.example.chatapp.data;
 
 public class Message {
     private String message;
-    private String sendername;
-    private String recepientname;
+    private String name;
+    private String sender;
+    private String recipientname;
+    private String timestamp;  // Added timestamp field
 
     public Message() {
+        // Default constructor required for Firebase
     }
 
+    public String getName() {
+        return name;
+    }
 
-    public Message(String message, String sendername, String recepientname) {
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Message(String message, String sender, String recipientname, String timestamp, String name) {
         this.message = message;
-        this.sendername = sendername;
-        this.recepientname = recepientname;
+        this.sender = sender;
+        this.recipientname = recipientname;
+        this.timestamp = timestamp;
+        this.name= name;
     }
-
 
     public String getMessage() {
         return message;
@@ -24,19 +35,27 @@ public class Message {
         this.message = message;
     }
 
-    public String getSendername() {
-        return sendername;
+    public String getSender() {
+        return sender;
     }
 
-    public void setSendername(String sendername) {
-        this.sendername = sendername;
+    public void setSender(String sender) {
+        this.sender = sender;
     }
 
-    public String getRecepientname() {
-        return recepientname;
+    public String getRecipientname() {
+        return recipientname;
     }
 
-    public void setRecepientname(String recepientname) {
-        this.recepientname = recepientname;
+    public void setRecipientname(String recipientname) {
+        this.recipientname = recipientname;
+    }
+
+    public String getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(String timestamp) {
+        this.timestamp = timestamp;
     }
 }

@@ -1,162 +1,154 @@
 package com.example.chatapp;
 
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Spinner;
-import android.widget.Toast;
-
 import com.example.chatapp.data.Message;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class ChatActivity extends AppCompatActivity {
 
-    private Spinner spinnerUsers;
     private EditText editTextMessage;
-    private Button buttonSend, buttonNewchat;
-    private DatabaseReference usersRef;
-    private DatabaseReference messagesRef;
+    private Button buttonSend;
     private RecyclerView recyclerView;
     private MessageAdapter messageAdapter;
+    private FirebaseAuth mAuth;
+    private List<Message> messageList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
-       buttonNewchat=findViewById(R.id.btnNewChat);
-        spinnerUsers = findViewById(R.id.spinnerUsers);
+
         editTextMessage = findViewById(R.id.editTextMessage);
         buttonSend = findViewById(R.id.buttonSend);
         recyclerView = findViewById(R.id.recyclerView);
 
-        usersRef = FirebaseDatabase.getInstance().getReference("userdetails");
-        messagesRef = FirebaseDatabase.getInstance().getReference("messages");
+        mAuth = FirebaseAuth.getInstance();
 
-        buttonSend.setOnClickListener(view -> sendMessageToRecipient());
+        // Initialize the MessageAdapter with the messageList
+        messageAdapter = new MessageAdapter(messageList, mAuth.getCurrentUser());
 
-        buttonNewchat.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent=new Intent(getApplicationContext(), Contacts.class);
-                startActivity(intent);
-            }
-        });
+        // Set up the RecyclerView
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(messageAdapter);
 
-       // loadUserListForSelection();
+        buttonSend.setOnClickListener(view -> sendMessageToConversation());
 
-        Log.d("ChatApp", "ChatActivity onCreate");
-
-
-        if (getIntent().hasExtra("recipientName")) {
-            String recipientName = getIntent().getStringExtra("recipientName");
-            Log.d("ChatApp", "Recipient Name: " + recipientName);
-            loadConversationMessages();
-        } else {
-            Toast.makeText(this, "Recipient not specified", Toast.LENGTH_SHORT).show();
-            finish();
-        }
+        loadConversationMessages();
     }
+
 
 
     private void loadConversationMessages() {
-        FirebaseAuth mAuth;
-        FirebaseUser user;
+        DatabaseReference conversationsRef = FirebaseDatabase.getInstance().getReference("conversations");
+        String recipientEmail= getIntent().getStringExtra("recipientEmail").replace(".", "_");;
+
+        String currentUserEmail = mAuth.getCurrentUser().getEmail().replace(".", "_");
 
 
+        // Ensure consistent order for conversationId
+        String conversationId = currentUserEmail.compareTo(recipientEmail) < 0 ?
+                currentUserEmail + "_" + recipientEmail : recipientEmail + "_" + currentUserEmail;
 
-        if (getIntent().hasExtra("recipientName")) {
-            String recipientName = getIntent().getStringExtra("recipientName");
-            messagesRef.orderByChild("recipient").equalTo(recipientName)
-                    .addValueEventListener(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                            List<Message> messageList = new ArrayList<>();
-                            for (DataSnapshot messageSnapshot : dataSnapshot.getChildren()) {
-                                String messageContent = messageSnapshot.child("message").getValue(String.class);
-                                String senderName= messageSnapshot.child("sender").getValue(String.class);
-
-                                Message message = new Message(messageContent,senderName,recipientName);
+        conversationsRef.child(conversationId).child("messages")
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        messageList.clear(); // Clear existing messages
+                        for (DataSnapshot messageSnapshot : dataSnapshot.getChildren()) {
+                            Message message = messageSnapshot.getValue(Message.class);
+                            if (message != null) {
                                 messageList.add(message);
                             }
-
-                            messageAdapter = new MessageAdapter(messageList);
-                            recyclerView.setLayoutManager(new LinearLayoutManager(ChatActivity.this));
-                            recyclerView.setAdapter(messageAdapter);
                         }
+                        messageAdapter.notifyDataSetChanged(); // Notify adapter of data change
+                    }
 
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError databaseError) {
-                            Toast.makeText(ChatActivity.this, "Failed to load conversation messages", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-        } else {
-            // Handle the case where "recipientName" is not provided
-            Toast.makeText(this, "Recipient not specified", Toast.LENGTH_SHORT).show();
-            finish(); // Close the activity if necessary
-        }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.e("ChatApp", "Failed to retrieve messages: " + databaseError.getMessage());
+                    }
+                });
     }
 
 
 
+    private void sendMessageToConversation() {
+        DatabaseReference conversationsRef = FirebaseDatabase.getInstance().getReference("conversations");
+        DatabaseReference contactRef = FirebaseDatabase.getInstance().getReference("userdetails");
 
+        String currentUserUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
+        // Retrieve sender name from the database
+        contactRef.child(currentUserUid)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            String senderName = snapshot.child("name").getValue(String.class);
 
-    private void sendMessageToRecipient() {
+                            //extract data from the intents
+                            Log.d("sender", "senderName: " + senderName);
 
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        FirebaseUser currentUser = auth.getCurrentUser();
+                            String recipientEmail = getIntent().getStringExtra("recipientEmail").replace(".", "_");
+                            String currentUserEmail = mAuth.getCurrentUser().getEmail().replace(".", "_");
 
-        if(currentUser!=null) {
-            String message = editTextMessage.getText().toString().trim();
-            String email=currentUser.getEmail();
+                            // Ensure consistent order for conversationId
+                            String conversationId = currentUserEmail.compareTo(recipientEmail) < 0 ?
+                                    currentUserEmail + "_" + recipientEmail : recipientEmail + "_" + currentUserEmail;
 
-            //   String recipientName = spinnerUsers.getSelectedItem().toString();
+                            DatabaseReference messagesRef = conversationsRef.child(conversationId).child("messages");
 
-            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("messages");
-            String messageId = databaseReference.push().getKey();
+                            String message = editTextMessage.getText().toString();
+                            String sender = currentUserEmail;
+                            String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
 
-            Map<String, Object> messageData = new HashMap<>();
+                            Map<String, Object> messageData = new HashMap<>();
+                            messageData.put("sender", sender);
+                            messageData.put("recipientName", senderName); // Use senderName instead of getIntent().getStringExtra("name")
+                            messageData.put("message", message);
+                            messageData.put("timestamp", timestamp);
 
-            if (getIntent().hasExtra("recipientName")) {
-                String recipientName = getIntent().getStringExtra("recipientName");
-                messageData.put("recipient", recipientName);
-                messageData.put("message", message);
-                messageData.put("sender", email);
+                            messagesRef.push().setValue(messageData)
+                                    .addOnSuccessListener(aVoid -> {
+                                        Log.d("ChatApp", "Message sent successfully");
+                                        // Clear the message input field after sending
+                                        editTextMessage.setText("");
+                                    })
+                                    .addOnFailureListener(e -> Log.e("ChatApp", "Error sending message: " + e.getMessage()));
+                        }
+                    }
 
-            }
-
-
-            databaseReference.child(messageId).setValue(messageData)
-                    .addOnSuccessListener(aVoid -> Toast.makeText(ChatActivity.this, "Message sent", Toast.LENGTH_SHORT).show())
-                    .addOnFailureListener(e -> {
-                        e.printStackTrace();
-                        Toast.makeText(ChatActivity.this, "Failed to send message", Toast.LENGTH_SHORT).show();
-                    });
-        }else{
-            Toast.makeText(this, "Login first", Toast.LENGTH_SHORT).show();
-        }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e("ChatApp", "Failed to retrieve user details: " + error.getMessage());
+                    }
+                });
     }
+
+
 
 }

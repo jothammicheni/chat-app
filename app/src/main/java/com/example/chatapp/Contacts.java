@@ -24,6 +24,8 @@ public class Contacts extends AppCompatActivity {
 
     private RecyclerView contactsRecyclerView;
     private DatabaseReference contactsRef;
+
+
     private ContactsAdapter contactsAdapter;
     private List<userInfo> userList;
 
@@ -41,28 +43,32 @@ public class Contacts extends AppCompatActivity {
 
         contactsRef = FirebaseDatabase.getInstance().getReference("userdetails");
 
+        contactsAdapter.setOnItemClickListener(new ContactsAdapter.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(userInfo user) {
+                // Add logging for debugging
+                Log.d("ChatApp", "Clicked on user: " + user.getName());
+                Intent intent = new Intent(getApplicationContext(), ChatActivity.class);
+                intent.putExtra("recipientEmail", user.getEmail());
+
+                startActivity(intent);
+            }
+        });
+
         contactsRef.addValueEventListener(new ValueEventListener() {
+            String name;
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 userList.clear();
                 for (DataSnapshot contactSnapshot : snapshot.getChildren()) {
-                    String name = contactSnapshot.child("name").getValue(String.class);
-                    String email = contactSnapshot.child("email").getValue(String.class);
-                    userInfo userInfo = new userInfo(name, email, "");
-                    userList.add(userInfo);
+                     name = contactSnapshot.child("name").getValue(String.class);
+
+
+                     String email = contactSnapshot.child("email").getValue(String.class);
+                     userInfo userInfo = new userInfo(name, email, "");
+                     userList.add(userInfo);
                 }
-
-                contactsAdapter.setOnItemClickListener(new ContactsAdapter.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(userInfo user) {
-                        // Add logging for debugging
-                        Log.d("ChatApp", "Clicked on user: " + user.getName());
-
-                        Intent intent = new Intent(getApplicationContext(), ChatActivity.class);
-                        intent.putExtra("recipientName", user.getEmail());
-                        startActivity(intent);
-                    }
-                });
 
                 contactsAdapter.notifyDataSetChanged();
             }

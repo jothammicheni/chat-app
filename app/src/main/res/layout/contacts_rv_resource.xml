@@ -8,13 +8,14 @@
        android:layout_width="match_parent"
        android:layout_height="100dp"
        android:orientation="vertical"
-       android:background="@color/black"
+       android:background="@color/white"
        android:layout_marginTop="10dp"
        >
        <TextView
            android:layout_width="wrap_content"
            android:layout_height="wrap_content"
            android:id="@+id/username"
+
            />
 
    </LinearLayout>

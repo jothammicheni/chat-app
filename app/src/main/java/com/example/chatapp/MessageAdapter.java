@@ -1,6 +1,6 @@
 package com.example.chatapp;
 
-import android.app.Notification;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,7 +10,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.chatapp.data.Message;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.List;
@@ -18,9 +17,11 @@ import java.util.List;
 public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageViewHolder> {
 
     private List<Message> messageList;
+    private static FirebaseUser currentUser;
 
-    public MessageAdapter(List<Message> messageList) {
+    public MessageAdapter(List<Message> messageList, FirebaseUser currentUser) {
         this.messageList = messageList;
+        this.currentUser = currentUser;
     }
 
     @NonNull
@@ -33,6 +34,10 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
     @Override
     public void onBindViewHolder(@NonNull MessageViewHolder holder, int position) {
         Message message = messageList.get(position);
+
+        holder.bind(message);
+
+        Log.d("ChatApp", "Binding Message: " + message);
         holder.bind(message);
     }
 
@@ -42,27 +47,26 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
     }
 
     static class MessageViewHolder extends RecyclerView.ViewHolder {
-        private TextView textViewMessage,textName;
-        FirebaseAuth mAuth;
-        FirebaseUser user;
+        private TextView textViewMessage, textName, textTimestamp;
 
         public MessageViewHolder(@NonNull View itemView) {
             super(itemView);
             textViewMessage = itemView.findViewById(R.id.message);
-            textName=itemView.findViewById(R.id.name);
-
-
+            textName = itemView.findViewById(R.id.name);
+            textTimestamp = itemView.findViewById(R.id.timestamp);
         }
 
         public void bind(Message message) {
-            FirebaseAuth mAuth;
-            FirebaseUser user;
-          if( user==message.getSendername()){
-              textName.setText(message.getSendername());
-          }
-            textName.setText(message.getRecepientname());
-            textViewMessage.setText(message.getMessage());
 
+            textViewMessage.setText(message.getMessage());
+            textTimestamp.setText(message.getTimestamp());
+
+            // Show/hide sender name based on whether the message is from the current user
+            if (currentUser != null && currentUser.getEmail().replace(".","_").equals(message.getSender())) {
+                textName.setText("You");
+            } else {
+                textName.setText(message.getRecipientname());
+            }
         }
     }
 }
